@@ -10,10 +10,6 @@
 <script src="js/admin.js" type="text/javascript"></script>
 <script src="js/seed_data.js" type="text/javascript"></script>
 <script src="js/cms.js" type="text/javascript"></script>
-<link rel="stylesheet" href="kindeditor/themes/default/default.css" />
-<script charset="utf-8" src="kindeditor/kindeditor.js"></script>
-<script charset="utf-8" src="kindeditor/lang/zh_CN.js"></script>
-<script charset="utf-8" src="kindeditor/plugins/b64upload.js"></script>
 </head>
 <body>
 <script>cms_guard();</script>
@@ -29,13 +25,21 @@
     <div class="layui-input-block"><input class="layui-input" id="pic" placeholder="相对路径，如 ../upload/image/xxx.jpg"></div>
   </div>
   <div class="layui-form-item">
-    <label class="layui-form-label">内容</label>
-    <div class="layui-input-block"><textarea id="content" name="content" style="width:100%;height:320px;visibility:hidden;"></textarea></div>
+    <label class="layui-form-label">详细内容(HTML)</label>
+    <div class="layui-input-block">
+      <div style="margin-bottom:6px;">
+        <input type="file" id="imgFile" accept="image/*" style="display:none;">
+        <button type="button" class="layui-btn layui-btn-sm" onclick="$('#imgFile').trigger('click')">插入图片(本地上传)</button>
+        <span style="color:#999;font-size:12px;">  也可直接粘贴/输入 HTML，图片支持 &lt;img src="相对路径"&gt;</span>
+      </div>
+      <textarea class="layui-textarea" id="content" style="width:100%;height:360px;font-family:monospace;font-size:13px;"></textarea>
+    </div>
   </div>
   <div class="layui-form-item">
     <div class="layui-input-block">
       <button class="layui-btn" onclick="doSave()">保存</button>
       <button class="layui-btn layui-btn-primary" onclick="history.back()">返回</button>
+      <span id="saveMsg" style="color:#666;margin-left:10px;"></span>
     </div>
   </div>
 </form>
@@ -44,33 +48,48 @@ var cid=parseInt((location.search.match(/c_id=(\d+)/)||[])[1]||'0');
 var iid=parseInt((location.search.match(/i_id=(\d+)/)||[])[1]||'0');
 $('#colName').text(CMS.colName(cid));
 $('#c_id').val(cid); $('#i_id').val(iid);
-var editor;
-function initEditor(){
+// 载入数据（基础+覆盖）
+(function(){
 	var it = iid ? CMS.getInfo(cid,iid) : null;
-	KindEditor.ready(function(K){
-		editor = K.create('#content', {
-			width:'100%', height:320,
-			allowFileManager: false,
-			uploadJson: 'kindeditor/php/upload_json.php',
-			filterMode: false,
-			items:['source','|','undo','redo','|','bold','italic','underline','forecolor','|','justifyleft','justifycenter','justifyright','|','insertorderedlist','insertunorderedlist','|','image','multiimage','link','unlink','|','removeformat','fullscreen']
-		});
-		patchKindEditorUpload(editor);
-		editor.ready(function(){
-			if(it && it.content) editor.html(it.content);
-		});
-	});
-}
+	$('#saveMsg').text('已载入'+(it?'：'+CMS.esc(it.title):'（新增）'));
+	if(it){
+		if(it.title) $('#title').val(it.title);
+		if(it.pic) $('#pic').val(it.pic);
+		if(it.content) $('#content').val(it.content);
+	}
+})();
+// 本地上传图片 → base64 → 插入 textarea
+document.getElementById('imgFile').addEventListener('change', function(){
+	var f=this.files && this.files[0]; if(!f) return;
+	if(f.size>2*1024*1024){ alert('图片过大，请压缩到2MB内'); this.value=''; return; }
+	var rd=new FileReader();
+	var self=this;
+	rd.onload=function(){
+		var ta=document.getElementById('content');
+		ta.value += (ta.value?'\n':'')+'<img src="'+rd.result+'" alt="" />';
+		self.value='';
+	};
+	rd.readAsDataURL(f);
+});
 function doSave(){
 	var title=$.trim($('#title').val());
 	if(!title){layui.use('layer',function(){layui.layer.msg('请填写标题');});return;}
-	var html = editor ? editor.html() : $('#content').val();
-	var item={title:title, pic:$.trim($('#pic').val()), content:html, addtime:CMS.now()};
-	if(iid){ item.i_id=iid; CMS.updInfo(cid,iid,item); }
-	else{ CMS.addInfo(cid,item); }
-	layui.use('layer',function(){ var layer=layui.layer; layer.msg('保存成功',{time:800},function(){ location.href='info_list.html?c_id='+cid; }); });
+	var item={title:title, pic:$.trim($('#pic').val()), content:$('#content').val(), addtime:CMS.now()};
+	var isNew = !iid;
+	if(isNew){ CMS.addInfo(cid,item); }
+	else{ item.i_id=iid; CMS.updInfo(cid,iid,item); }
+	// 校验写入成功
+	var checkId = isNew ? item.i_id : iid;
+	var chk=CMS.getInfo(cid, checkId);
+	layui.use('layer',function(){ var layer=layui.layer;
+		if(chk && chk.title===title){
+			$('#saveMsg').text('保存成功（已写入本地存储）');
+			layer.msg('保存成功',{time:1200},function(){ location.href='info_list.html?c_id='+cid; });
+		}else{
+			layer.msg('保存失败：浏览器存储不可用');
+		}
+	});
 }
-initEditor();
 </script>
 </body>
 </html>

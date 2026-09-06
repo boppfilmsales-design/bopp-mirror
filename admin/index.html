@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>XgxCms</title>
+</head>
+<script>
+if(!(localStorage.getItem('xgxcms_admin'))){location.href='login.html';}
+</script>
+<frameset rows="60,*" frameborder="no" border="0" framespacing="0">
+  <frame src="top.html" name="topFrame" scrolling="No" noresize="noresize" id="topFrame" style="background:#23262E" />
+  <frameset cols="200,*" frameborder="NO" border="0" framespacing="0" name="mainweb" id="mainweb">
+		<frame src="menu_1.html" name="leftFrame" id="leftFrame" scrolling="yes" noresize style="background:#393D49" />
+		<frame src="welcome.html" name="rightFrame" id="rightFrame" scrolling="yes" />
+  </frameset>
+</frameset>
+<noframes><body oncontextmenu="self.event.returnValue=false">
+</body>
+</noframes>
+</html>

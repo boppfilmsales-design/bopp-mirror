@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>信息转移</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="css/admin.css" rel="stylesheet" type="text/css" />
+<link href="js/layui/css/layui.css" rel="stylesheet" type="text/css" />
+<script src="js/jquery.min.js" type="text/javascript"></script>
+<script src="js/layui/layui.js" type="text/javascript"></script>
+<script src="js/admin.js" type="text/javascript"></script>
+<script src="js/cms.js" type="text/javascript"></script>
+</head>
+<body>
+<script>cms_guard();</script>
+<div class="nowplace"><span class="nownavi">当前位置：<cite>系统管理</cite>&gt;<cite>信息转移</cite></span></div>
+<div style="padding:20px; color:#666; line-height:2;">
+<p>将信息从源栏目转移到目标栏目：</p>
+<form class="layui-form" onsubmit="return false;" style="margin-top:15px;">
+  <div class="layui-form-item"><label class="layui-form-label">源栏目c_id</label><div class="layui-input-block"><input class="layui-input" id="src_cid" style="width:200px;"></div></div>
+  <div class="layui-form-item"><label class="layui-form-label">目标栏目c_id</label><div class="layui-input-block"><input class="layui-input" id="dst_cid" style="width:200px;"></div></div>
+  <div class="layui-form-item"><div class="layui-input-block"><button class="layui-btn" onclick="doTransfer()">执行转移</button></div></div>
+</form>
+</div>
+<script type="text/javascript">
+function doTransfer(){
+	var s=parseInt($('#src_cid').val()||'0'), d=parseInt($('#dst_cid').val()||'0');
+	if(!s||!d){layui.use('layer',function(){layui.layer.msg('请填写c_id');});return;}
+	var list=CMS.getInfos(s);
+	CMS.setInfos(d, CMS.getInfos(d).concat(list));
+	CMS.setInfos(s, []);
+	layui.use('layer',function(){layui.layer.msg('转移完成：'+list.length+' 条');});
+}
+</script>
+</body>
+</html>

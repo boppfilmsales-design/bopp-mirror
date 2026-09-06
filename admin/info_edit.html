@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>编辑信息</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="css/admin.css" rel="stylesheet" type="text/css" />
+<link href="js/layui/css/layui.css" rel="stylesheet" type="text/css" />
+<script src="js/jquery.min.js" type="text/javascript"></script>
+<script src="js/layui/layui.js" type="text/javascript"></script>
+<script src="js/admin.js" type="text/javascript"></script>
+<script src="js/cms.js" type="text/javascript"></script>
+</head>
+<body>
+<script>cms_guard();</script>
+<div class="nowplace"><span class="nownavi">当前位置：<cite>内容管理</cite>&gt;<cite id="colName"></cite>&gt;<cite>编辑</cite></span></div>
+<form class="layui-form" style="padding:20px;" onsubmit="return false;">
+  <input type="hidden" id="c_id"><input type="hidden" id="i_id">
+  <div class="layui-form-item">
+    <label class="layui-form-label">标题</label>
+    <div class="layui-input-block"><input class="layui-input" id="title"></div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">图片URL</label>
+    <div class="layui-input-block"><input class="layui-input" id="pic"><span style="color:#999;font-size:12px;">相对路径，如 ../upload/image/xxx.jpg</span></div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">内容</label>
+    <div class="layui-input-block"><textarea class="layui-textarea" id="content" style="height:280px;"></textarea></div>
+  </div>
+  <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn" onclick="doSave()">保存</button>
+      <button class="layui-btn layui-btn-primary" onclick="history.back()">返回</button>
+    </div>
+  </div>
+</form>
+<script type="text/javascript">
+var cid=parseInt((location.search.match(/c_id=(\d+)/)||[])[1]||'0');
+var iid=parseInt((location.search.match(/i_id=(\d+)/)||[])[1]||'0');
+$('#colName').text(CMS.colName(cid));
+$('#c_id').val(cid); $('#i_id').val(iid);
+if(iid){
+	var it=CMS.getInfo(cid,iid);
+	if(it){ $('#title').val(it.title||''); $('#pic').val(it.pic||''); $('#content').val(it.content||''); }
+}
+function doSave(){
+	var title=$.trim($('#title').val());
+	if(!title){layui.use('layer',function(){layui.layer.msg('请填写标题');});return;}
+	var item={title:title, pic:$.trim($('#pic').val()), content:$('#content').val(), addtime:CMS.now()};
+	if(iid){ item.i_id=iid; CMS.updInfo(cid,iid,item); }
+	else{ CMS.addInfo(cid,item); }
+	layui.use('layer',function(){ var layer=layui.layer; layer.msg('保存成功',{time:800},function(){ location.href='info_list.html?c_id='+cid; }); });
+}
+</script>
+</body>
+</html>

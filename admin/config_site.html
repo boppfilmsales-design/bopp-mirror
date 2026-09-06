@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>站点设置</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="css/admin.css" rel="stylesheet" type="text/css" />
+<link href="js/layui/css/layui.css" rel="stylesheet" type="text/css" />
+<script src="js/jquery.min.js" type="text/javascript"></script>
+<script src="js/layui/layui.js" type="text/javascript"></script>
+<script src="js/admin.js" type="text/javascript"></script>
+<script src="js/cms.js" type="text/javascript"></script>
+</head>
+<body>
+<script>cms_guard();</script>
+<div class="nowplace"><span class="nownavi">当前位置：<cite>系统管理</cite>&gt;<cite>站点设置</cite></span></div>
+<form class="layui-form" style="padding:20px;" onsubmit="return false;">
+  <div class="layui-form-item"><label class="layui-form-label">站点名称</label><div class="layui-input-block"><input class="layui-input" id="site_name"></div></div>
+  <div class="layui-form-item"><label class="layui-form-label">站点关键词</label><div class="layui-input-block"><input class="layui-input" id="site_keywords"></div></div>
+  <div class="layui-form-item"><label class="layui-form-label">站点描述</label><div class="layui-input-block"><textarea class="layui-textarea" id="site_description"></textarea></div></div>
+  <div class="layui-form-item"><label class="layui-form-label">联系电话</label><div class="layui-input-block"><input class="layui-input" id="site_tel"></div></div>
+  <div class="layui-form-item"><label class="layui-form-label">公司邮箱</label><div class="layui-input-block"><input class="layui-input" id="site_email"></div></div>
+  <div class="layui-form-item"><label class="layui-form-label">公司地址</label><div class="layui-input-block"><input class="layui-input" id="site_addr"></div></div>
+  <div class="layui-form-item"><div class="layui-input-block">
+    <button class="layui-btn" onclick="doSave()">保存设置</button>
+  </div></div>
+</form>
+<script type="text/javascript">
+var cfg=CMS.getCfg();
+$('#site_name').val(cfg.site_name||'Asia Pacific Industry Group Co., Limited');
+$('#site_keywords').val(cfg.site_keywords||'BOPP film, BOPET film, tape, thermal lamination film');
+$('#site_description').val(cfg.site_description||'');
+$('#site_tel').val(cfg.site_tel||'86-551-64687285');
+$('#site_email').val(cfg.site_email||'sales@boppfilmsales.com');
+$('#site_addr').val(cfg.site_addr||'NO.3399 LUZHOU AVE.,BAOHE DIST., 230051, HEFEI, ANHUI,CHINA');
+function doSave(){
+	CMS.setCfg({site_name:$.trim($('#site_name').val()), site_keywords:$.trim($('#site_keywords').val()), site_description:$.trim($('#site_description').val()), site_tel:$.trim($('#site_tel').val()), site_email:$.trim($('#site_email').val()), site_addr:$.trim($('#site_addr').val())});
+	layui.use('layer',function(){layui.layer.msg('保存成功');});
+}
+</script>
+</body>
+</html>

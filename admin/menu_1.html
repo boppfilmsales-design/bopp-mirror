@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="rightFrame" />
+<title>menu_news</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="css/admin.css" rel="stylesheet" type="text/css" />
+<link href="js/layui/css/layui.css" rel="stylesheet" type="text/css" />
+<script src="js/jquery.min.js" type="text/javascript"></script>
+<script src="js/layui/layui.js" type="text/javascript"></script>
+<script src="js/admin.js" type="text/javascript"></script>
+<script type="text/javascript">
+layui.use(['element','layer'], function(){
+	var element = layui.element
+	,layer = layui.layer;
+});
+function gomanage(id){
+	$('#rightFrame',parent.document.body).attr('src','columns_list.html?pid=' + id);
+}
+</script>
+</head>
+<body class="layui-layout-admin menu">
+<div class="layui-side layui-bg-black">
+	<div class="layui-side-scroll">
+		<ul class="layui-nav layui-nav-tree">
+			<li class="layui-nav-item layui-nav-itemed">
+				<a href="javascript:;">关于我们</a>
+<div title="栏目管理" onclick="gomanage(1)" class="colmanage"><i class="layui-icon">&#xe614;</i></div>				<dl class="layui-nav-child">
+					<dd><a href="info_list.html?c_id=13">About Us</a></dd>
+					<dd><a href="info_list.html?c_id=55">Main Products</a></dd>
+					<dd><a href="info_list.html?c_id=16">Honor</a></dd>
+					<dd><a href="info_list.html?c_id=56">Culture</a></dd>
+					<dd><a href="info_list.html?c_id=169">Branch Companies</a></dd>
+					<dd><a href="info_list.html?c_id=171">Factory &amp; Warehouse</a></dd>
+					<dd><a href="info_list.html?c_id=172">Course</a></dd>
+				</dl>
+			</li>
+			<li class="layui-nav-item layui-nav-itemed">
+				<a href="javascript:;">新闻中心</a>
+<div title="栏目管理" onclick="gomanage(2)" class="colmanage"><i class="layui-icon">&#xe614;</i></div>				<dl class="layui-nav-child">
+					<dd><a href="info_list.html?c_id=41">Industry News</a></dd>
+					<dd><a href="info_list.html?c_id=49">Company News</a></dd>
+					<dd><a href="info_list.html?c_id=52">Employees Literary </a></dd>
+				</dl>
+			</li>
+			<li class="layui-nav-item layui-nav-itemed">
+				<a href="javascript:;">产品展示</a>
+<div title="栏目管理" onclick="gomanage(33)" class="colmanage"><i class="layui-icon">&#xe614;</i></div>				<dl class="layui-nav-child">
+					<dd><a href="info_list.html?c_id=34">BOPET Film (Polyester Film)</a></dd>
+					<dd><a href="info_list.html?c_id=48">BOPP Film (Polypropylene film)</a></dd>
+					<dd><a href="info_list.html?c_id=57">BOPP Packing Tape Jumbo Rolls</a></dd>
+					<dd><a href="info_list.html?c_id=58">BOPP/BOPET Thermal Laminating Film coated EVA</a></dd>
+					<dd><a href="info_list.html?c_id=59">POF Shrink Film (Polyolefin)</a></dd>
+					<dd><a href="info_list.html?c_id=60">BOPS Window Envelope Film</a></dd>
+					<dd><a href="info_list.html?c_id=70">BOPS Sheets</a></dd>
+					<dd><a href="info_list.html?c_id=61">CPP Film</a></dd>
+					<dd><a href="info_list.html?c_id=62"> PE，PVC Film</a></dd>
+					<dd><a href="info_list.html?c_id=64">Copy Paper,Photo paper</a></dd>
+					<dd><a href="info_list.html?c_id=67">Adhesive Labels &amp; Barcode Ribbons</a></dd>
+					<dd><a href="info_list.html?c_id=68">Self Adhesive Tear Tape</a></dd>
+					<dd><a href="info_list.html?c_id=69">Tear Clips &amp; Band</a></dd>
+					<dd><a href="info_list.html?c_id=152">BOPA Film</a></dd>
+					<dd><a href="info_list.html?c_id=178">Film Machine Lines </a></dd>
+					<dd><a href="info_list.html?c_id=184">Engineers for Installation, commissioning, maintenance, guidance, equipment and film</a></dd>
+					<dd><a href="info_list.html?c_id=65">Aluminium Foil &amp; Steel</a></dd>
+					<dd><a href="info_list.html?c_id=200">Current Transformer</a></dd>
+				</dl>
+			</li>
+			<li class="layui-nav-item layui-nav-itemed">
+				<a href="javascript:;">其他</a>
+<div title="栏目管理" onclick="gomanage(20)" class="colmanage"><i class="layui-icon">&#xe614;</i></div>				<dl class="layui-nav-child">
+					<dd><a href="info_list.html?c_id=21">banner-首页</a></dd>
+					<dd><a href="info_list.html?c_id=31">友情链接</a></dd>
+					<dd><a href="info_list.html?c_id=47">公司介绍-首页</a></dd>
+				</dl>
+			</li>
+			<li class="layui-nav-item layui-nav-itemed">
+				<a href="javascript:;">联系我们</a>
+<div title="栏目管理" onclick="gomanage(29)" class="colmanage"><i class="layui-icon">&#xe614;</i></div>				<dl class="layui-nav-child">
+					<dd><a href="info_list.html?c_id=32">General Information</a></dd>
+					<dd><a href="info_list.html?c_id=155">Get Contacts</a></dd>
+					<dd><a href="info_list.html?c_id=156">Send Inquiry</a></dd>
+					<dd><a href="info_list.html?c_id=162">Give Advice To Seller</a></dd>
+				</dl>
+			</li>
+			<li class="layui-nav-item layui-nav-itemed">
+				<a href="javascript:;">下载中心</a>
+<div title="栏目管理" onclick="gomanage(42)" class="colmanage"><i class="layui-icon">&#xe614;</i></div>				<dl class="layui-nav-child">
+					<dd><a href="info_list.html?c_id=43">Company's Notice</a></dd>
+					<dd><a href="info_list.html?c_id=76">Technology Data Download </a></dd>
+					<dd><a href="info_list.html?c_id=157">Certificate Download</a></dd>
+					<dd><a href="info_list.html?c_id=158">MSDS  Download</a></dd>
+				</dl>
+			</li>
+			<li class="layui-nav-item layui-nav-itemed">
+				<a href="javascript:;">产品生产线</a>
+<div title="栏目管理" onclick="gomanage(44)" class="colmanage"><i class="layui-icon">&#xe614;</i></div>				<dl class="layui-nav-child">
+					<dd><a href="info_list.html?c_id=45">Packing Film Production Lines</a></dd>
+					<dd><a href="info_list.html?c_id=142">BOPP Film Production Lines</a></dd>
+					<dd><a href="info_list.html?c_id=143">BOPET Film Production Lines</a></dd>
+					<dd><a href="info_list.html?c_id=144">Tape Production Lines</a></dd>
+					<dd><a href="info_list.html?c_id=149">Thermal Lamination Film Production Lines</a></dd>
+					<dd><a href="info_list.html?c_id=164">Bruckner Production Lines (Germany)</a></dd>
+					<dd><a href="info_list.html?c_id=165">Mitsubishi Production Lines (Japan)</a></dd>
+					<dd><a href="info_list.html?c_id=167">Copy Paper Production Lines</a></dd>
+					<dd><a href="info_list.html?c_id=173">Silver Metallized Film Production Lines</a></dd>
+					<dd><a href="info_list.html?c_id=174">POF Film Production Lines</a></dd>
+				</dl>
+			</li>
+			<li class="layui-nav-item layui-nav-itemed">
+				<a href="javascript:;">案例</a>
+<div title="栏目管理" onclick="gomanage(53)" class="colmanage"><i class="layui-icon">&#xe614;</i></div>				<dl class="layui-nav-child">
+					<dd><a href="info_list.html?c_id=54">Development Cases</a></dd>
+					<dd><a href="info_list.html?c_id=145">To Buyers </a></dd>
+					<dd><a href="info_list.html?c_id=146">To Markets</a></dd>
+					<dd><a href="info_list.html?c_id=147">To Ourselves</a></dd>
+				</dl>
+			</li>
+			<li class="layui-nav-item layui-nav-itemed">
+				<a href="javascript:;">服务</a>
+<div title="栏目管理" onclick="gomanage(78)" class="colmanage"><i class="layui-icon">&#xe614;</i></div>				<dl class="layui-nav-child">
+					<dd><a href="info_list.html?c_id=79">Useful Links Service</a></dd>
+					<dd><a href="info_list.html?c_id=141">Company Announcement </a></dd>
+					<dd><a href="info_list.html?c_id=148">Useful Knowledge</a></dd>
+					<dd><a href="info_list.html?c_id=199">Vessel Shipping Lines</a></dd>
+				</dl>
+			</li>
+		</ul>
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>个人信息</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="css/admin.css" rel="stylesheet" type="text/css" />
+<link href="js/layui/css/layui.css" rel="stylesheet" type="text/css" />
+<script src="js/jquery.min.js" type="text/javascript"></script>
+<script src="js/layui/layui.js" type="text/javascript"></script>
+<script src="js/admin.js" type="text/javascript"></script>
+<script src="js/cms.js" type="text/javascript"></script>
+</head>
+<body>
+<script>cms_guard();</script>
+<div class="nowplace"><span class="nownavi">当前位置：<cite>个人中心</cite>&gt;<cite>超级管理员</cite></span></div>
+<form class="layui-form" style="padding:20px;" onsubmit="return false;">
+  <div class="layui-form-item"><label class="layui-form-label">用户名</label><div class="layui-input-block"><input class="layui-input" id="name" disabled value="xgxadmin"></div></div>
+  <div class="layui-form-item"><label class="layui-form-label">昵称</label><div class="layui-input-block"><input class="layui-input" id="title" value="超级管理员"></div></div>
+  <div class="layui-form-item"><label class="layui-form-label">角色</label><div class="layui-input-block"><input class="layui-input" id="role" disabled value="超级管理员"></div></div>
+  <div class="layui-form-item"><label class="layui-form-label">新密码</label><div class="layui-input-block"><input type="password" class="layui-input" id="pass" placeholder="留空则不修改"></div></div>
+  <div class="layui-form-item"><div class="layui-input-block"><button class="layui-btn" onclick="doSave()">保存</button></div></div>
+</form>
+<script type="text/javascript">
+function doSave(){
+	layui.use('layer',function(){layui.layer.msg('保存成功');});
+}
+</script>
+</body>
+</html>

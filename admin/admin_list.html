@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>管理员管理</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="css/admin.css" rel="stylesheet" type="text/css" />
+<link href="js/layui/css/layui.css" rel="stylesheet" type="text/css" />
+<script src="js/jquery.min.js" type="text/javascript"></script>
+<script src="js/layui/layui.js" type="text/javascript"></script>
+<script src="js/admin.js" type="text/javascript"></script>
+<script src="js/cms.js" type="text/javascript"></script>
+</head>
+<body>
+<script>cms_guard();</script>
+<div class="nowplace"><span class="nownavi">当前位置：<cite>权限管理</cite>&gt;<cite>管 理 员</cite></span></div>
+<div class="layui-btn-group" style="padding:10px 15px;">
+	<button class="layui-btn" onclick="addAdmin()"><i class="layui-icon">&#xe654;</i> 新增管理员</button>
+</div>
+<div style="padding:0 15px 20px;">
+<table class="layui-table">
+  <thead><tr><th>ID</th><th>名称</th><th>用户名</th><th>角色</th><th>操作</th></tr></thead>
+  <tbody id="tbody"></tbody>
+</table>
+</div>
+<script type="text/javascript">
+function render(){
+	var list=CMS.getAdms();
+	var h='';
+	for(var i=0;i<list.length;i++){
+		var a=list[i];
+		h+='<tr><td>'+a.id+'</td><td>'+CMS.esc(a.title)+'</td><td>'+CMS.esc(a.name)+'</td><td>'+CMS.esc(a.role)+'</td>'+
+		   '<td><a class="layui-btn layui-btn-danger layui-btn-xs" href="javascript:;" onclick="mdel('+a.id+')">删除</a></td></tr>';
+	}
+	$('#tbody').html(h);
+}
+function addAdmin(){
+	layui.use('layer',function(){ var layer=layui.layer;
+		layer.prompt({title:'输入新管理员用户名（名称同用户名）'}, function(val,idx){
+			val=$.trim(val); if(!val){layer.msg('用户名不能为空');return;}
+			var list=CMS.getAdms();
+			for(var i=0;i<list.length;i++){ if(list[i].name==val){layer.msg('用户名已存在');return;} }
+			list.push({id:list.length?Math.max.apply(null,list.map(function(x){return x.id;}))+1:1, title:val, name:val, level:2, role:'管理员'});
+			CMS.setAdms(list); layer.close(idx); layer.msg('已添加'); render();
+		});
+	});
+}
+function mdel(id){
+	layui.use('layer',function(){ var layer=layui.layer;
+		layer.confirm('确认删除该管理员？',{icon:3},function(){ CMS.setAdms(CMS.getAdms().filter(function(x){return x.id!=id;})); layer.msg('已删除'); render(); });
+	});
+}
+render();
+</script>
+</body>
+</html>

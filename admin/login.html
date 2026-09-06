@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>登录 - XgxCms</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="css/admin.css" rel="stylesheet" type="text/css" />
+<link href="js/layui/css/layui.css" rel="stylesheet" type="text/css" />
+<script src="js/jquery.min.js" type="text/javascript"></script>
+<script src="js/layui/layui.js" type="text/javascript"></script>
+<script src="js/admin.js" type="text/javascript"></script>
+<script type="text/javascript">
+layui.use(['element','form','laypage'], function(){
+	var element = layui.element
+	,form = layui.form
+	,laypage = layui.laypage
+	,layer = layui.layer;
+	});
+$(function(){
+	$('#a_name').focus();
+});
+function doLogin(){
+	var n=$.trim($('#a_name').val());
+	var p=$('#a_pass').val();
+	if(!n||!p){layer.msg('请输入用户名和密码');return;}
+	if(n=='xgxadmin'&&p=='xgxadmin'){
+		try{localStorage.setItem('xgxcms_admin','xgxadmin');}catch(e){}
+		location.href='index.html';
+	}else{
+		layer.msg('用户名或密码错误');
+	}
+}
+</script>
+</head>
+
+<body class="loginbg">
+<div class="login">
+<fieldset class="layui-elem-field">
+  <legend>登录</legend>
+  <div class="layui-field-box">
+	<form class="layui-form" onsubmit="return false;">
+	  <div class="layui-form-item">
+		<label class="layui-form-label">用户名</label>
+		<div class="layui-input-block">
+		  <input type="text" name="a_name" id="a_name" lay-verify="required" maxlength="20" autocomplete="off" placeholder="请输入登录用户名" class="layui-input" value="">
+		</div>
+	  </div>
+	  <div class="layui-form-item">
+		<label class="layui-form-label">密　码</label>
+		<div class="layui-input-block">
+		  <input type="password" name="a_pass" id="a_pass" lay-verify="required" maxlength="20" autocomplete="off" placeholder="请输入登录密码" class="layui-input" value="">
+		</div>
+	  </div>
+	  <div class="layui-form-item" style="display:none">
+		<label class="layui-form-label">验证码</label>
+		<div class="layui-input-block">
+		  <a class="vcode" href="javascript:;" onClick="refreshvcode(this);">贰拾壹加玖等于</a>
+		  <input type="text" name="vcode" lay-verify="required|number" maxlength="4" autocomplete="off" placeholder="计算结果" class="layui-input" value="1234" style="width:95px; float:right;">
+		</div>
+	  </div>
+	  <div class="layui-form-item">
+		<div class="layui-input-block">
+		  <button class="layui-btn" lay-submit="" onclick="doLogin()">登录</button>
+		</div>
+	  </div>
+	</form>
+  </div>
+</fieldset>
+</div>
+<script type="text/javascript">
+$(function(){
+	$('#a_pass').keydown(function(e){ if(e.keyCode==13){doLogin();} });
+	$('#a_name').keydown(function(e){ if(e.keyCode==13){doLogin();} });
+});
+</script>
+</body>
+</html>

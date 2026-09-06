@@ -51,9 +51,9 @@ var CMS = (function(){
 		// 角色
 		getRoles: function(){ return load(ROL, [{id:1, name:'超级管理员'}]); },
 		setRoles: function(v){ save(ROL, v); },
-		// 会话
-		isLogin: function(){ return !!load(SESS, null); },
-		login: function(){ save(SESS, 'xgxadmin'); },
+		// 会话（直接读写 localStorage，不用 JSON.parse —— 登录存的是原始字符串）
+		isLogin: function(){ try{ return !!localStorage.getItem(SESS); }catch(e){ return false; } },
+		login: function(){ try{ localStorage.setItem(SESS, 'xgxadmin'); }catch(e){} },
 		logout: function(){ try{ localStorage.removeItem(SESS); }catch(e){} },
 		// 工具
 		esc: function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); },

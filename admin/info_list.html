@@ -8,6 +8,7 @@
 <script src="js/jquery.min.js" type="text/javascript"></script>
 <script src="js/layui/layui.js" type="text/javascript"></script>
 <script src="js/admin.js" type="text/javascript"></script>
+<script src="js/seed_data.js" type="text/javascript"></script>
 <script src="js/cms.js" type="text/javascript"></script>
 </head>
 <body>
@@ -46,7 +47,7 @@ var group = CMS.groupByPid ? null : null;
 // 找所属组（按 subs 匹配）
 (function(){ for(var i=0;i<CMS.GROUPS.length;i++){ for(var j=0;j<CMS.GROUPS[i].subs.length;j++){ if(CMS.GROUPS[i].subs[j].c_id==cid){ $('#grpName').text(CMS.GROUPS[i].title); } } } })();
 $('#colName').text(CMS.colName(cid));
-// 子分类 tab：显示同组子栏目
+// 子分类 tab：同组子栏目 + SUBS 子分类
 var curGroup=null;
 for(var i=0;i<CMS.GROUPS.length;i++){ for(var j=0;j<CMS.GROUPS[i].subs.length;j++){ if(CMS.GROUPS[i].subs[j].c_id==cid){ curGroup=CMS.GROUPS[i]; } } }
 var tabHtml='';
@@ -56,6 +57,20 @@ if(curGroup){
 		tabHtml+='<li'+(s.c_id==cid?' class="layui-this"':'')+'><a href="info_list.html?c_id='+s.c_id+'">'+CMS.esc(s.name)+'</a></li>';
 	}
 	$('#subTabs').html(tabHtml);
+}
+// 若是子分类(不在 GROUPS.subs 但属于某大类SUBS), 也显示同组tab
+var parentCid=null;
+for(var pc in CMS.SUBS){ if(CMS.SUBS[pc].indexOf(cid)!=-1){ parentCid=parseInt(pc); } }
+if(parentCid){
+	// 找到父大类所在的组
+	var pg=null;
+	for(var i=0;i<CMS.GROUPS.length;i++){ for(var j=0;j<CMS.GROUPS[i].subs.length;j++){ if(CMS.GROUPS[i].subs[j].c_id==parentCid){ pg=CMS.GROUPS[i]; } } }
+	var ph='';
+	if(pg){ for(var j=0;j<pg.subs.length;j++){ var s2=pg.subs[j]; ph+='<li'+(s2.c_id==parentCid?' class="layui-this"':'')+'><a href="info_list.html?c_id='+s2.c_id+'">'+CMS.esc(s2.name)+'</a></li>'; } }
+	// 追加该大类的子分类tab
+	var subs=CMS.SUBS[parentCid]||[];
+	for(var j=0;j<subs.length;j++){ var c2=subs[j]; ph+='<li'+(c2==cid?' class="layui-this"':'')+'><a href="info_list.html?c_id='+c2+'">'+CMS.esc(CMS.subName(c2))+'</a></li>'; }
+	$('#subTabs').html(ph);
 }
 // 数据加载
 function render(){

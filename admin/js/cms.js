@@ -12,6 +12,14 @@ var CMS = (function(){
 		{pid:53,title:'案例', subs:[{c_id:54,name:'Development Cases'},{c_id:145,name:'To Buyers '},{c_id:146,name:'To Markets'},{c_id:147,name:'To Ourselves'}]},
 		{pid:78,title:'服务', subs:[{c_id:79,name:'Useful Links Service'},{c_id:141,name:'Company Announcement '},{c_id:148,name:'Useful Knowledge'},{c_id:199,name:'Vessel Shipping Lines'}]}
 	];
+	
+	// 子分类映射（大类 c_id -> [子分类 c_id]）, 与源站一致
+	var SUBS = {34:[66,71,72,73,74,75,177],48:[80,81,82,83,84,85,86,87,88,153,163,195],57:[89,90,91,92,93,94,154],58:[95,96,150,151,170],59:[97,98,99,100],60:[101,102,175,197,198],70:[103],61:[104,105,106,107],62:[108,109,110,111,176],64:[117,118,119,120,121,125,166],67:[126,127,128,129,130,131,132,133,194],68:[134,135,136,137,138,139,140],69:[160,161],178:[179,180,181,182,183],184:[185],65:[123,124,193],200:[201]};
+	function subName(cid){
+		// 从已有 GROUPS subs 查名, 否则用 SUBS 顺序生成
+		for(var i=0;i<GROUPS.length;i++){ for(var j=0;j<GROUPS[i].subs.length;j++){ if(GROUPS[i].subs[j].c_id==cid) return GROUPS[i].subs[j].name; } }
+		return '子栏目'+cid;
+	}
 	var COL = '_xgxcms_cols_';   // 栏目配置 localStorage key
 	var INF = '_xgxcms_infos_';  // 内容
 	var MSG = '_xgxcms_msgs_';   // 留言
@@ -23,8 +31,23 @@ var CMS = (function(){
 	function load(k, def){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } }
 	function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 
+
+	// 首次使用：从静态页抽取的种子数据填充 localStorage
+	function initSeed(){
+		if(typeof XGXCMS_SEED!=='undefined' && XGXCMS_SEED){
+			var all=load(INF, {});
+			var changed=false;
+			for(var k in XGXCMS_SEED){
+				if(!all[k]){ all[k]=XGXCMS_SEED[k]; changed=true; }
+			}
+			if(changed) save(INF, all);
+		}
+	}
+	initSeed();
 	return {
 		GROUPS: GROUPS,
+		SUBS: SUBS,
+		subName: subName,
 		groupByPid: function(pid){ for(var i=0;i<GROUPS.length;i++){ if(GROUPS[i].pid==pid) return GROUPS[i]; } return null; },
 		colName: function(cid){ for(var i=0;i<GROUPS.length;i++){ for(var j=0;j<GROUPS[i].subs.length;j++){ if(GROUPS[i].subs[j].c_id==cid) return GROUPS[i].subs[j].name; } } return '栏目'+cid; },
 		// 栏目（pid 与 c_id 的父子关系）

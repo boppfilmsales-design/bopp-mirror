@@ -33,7 +33,7 @@ var CMS = (function(){
 
 
 	// 种子版本（更新种子时 +1 强制重填）
-	var SEED_VER = 'v3';
+	var SEED_VER = 'v4';
 	// 首次使用：从静态页抽取的种子数据填充 localStorage
 	function initSeed(){
 		if(typeof XGXCMS_SEED!=='undefined' && XGXCMS_SEED){

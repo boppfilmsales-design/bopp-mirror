@@ -32,9 +32,18 @@ var CMS = (function(){
 	function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 
 
+	// 种子版本（更新种子时 +1 强制重填）
+	var SEED_VER = 'v3';
 	// 首次使用：从静态页抽取的种子数据填充 localStorage
 	function initSeed(){
 		if(typeof XGXCMS_SEED!=='undefined' && XGXCMS_SEED){
+			var lastVer='';
+			try{ lastVer=localStorage.getItem('_xgxcms_seedver_')||''; }catch(e){}
+			if(lastVer!==SEED_VER){
+				save(INF, XGXCMS_SEED);
+				try{ localStorage.setItem('_xgxcms_seedver_', SEED_VER); }catch(e){}
+				return;
+			}
 			var all=load(INF, {});
 			var changed=false;
 			for(var k in XGXCMS_SEED){

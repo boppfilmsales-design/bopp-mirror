@@ -27,6 +27,7 @@
 <div class="layui-btn-group" style="padding:10px 15px;">
 	<button class="layui-btn" onclick="location.href='info_edit.html?c_id='+cid+'&i_id=0'"><i class="layui-icon">&#xe654;</i> 新增信息</button>
 	<button class="layui-btn layui-btn-danger" onclick="delmsg()"><i class="layui-icon">&#xe640;</i> 批量删除</button>
+	<button class="layui-btn layui-btn-normal" onclick="syncToSeed()"><i class="layui-icon">&#xe679;</i> 同步到 seed_data.js</button>
 </div>
 <div style="padding:0 15px 20px;">
 <table class="layui-table" lay-even>
@@ -109,6 +110,26 @@ function delmsg(){
 			$("input[name='i_id[]']:checked").each(function(){ CMS.delInfo(cid,parseInt(this.value)); });
 			layer.msg('已删除'); render();
 		});
+	});
+}
+function syncToSeed(){
+	layui.use('layer',function(){ var layer=layui.layer;
+		var overrides = {};
+		try{ overrides = JSON.parse(localStorage.getItem('_xgxcms_overrides_')||'{}'); }catch(e){}
+		if(!Object.keys(overrides).length){
+			layer.msg('当前没有待同步的数据，请先在后台编辑并保存');
+			return;
+		}
+		// 生成合并后的 seed_data.js 片段
+		var seedSnippet = 'var XGXCMS_OVERRIDES = ' + JSON.stringify(overrides, null, 2) + ';\n';
+		// 复制到剪贴板
+		var ta = document.createElement('textarea');
+		ta.value = seedSnippet;
+		document.body.appendChild(ta);
+		ta.select();
+		document.execCommand('copy');
+		document.body.removeChild(ta);
+		layer.msg('✅ 已复制到剪贴板！\n\n下一步：\n1. 打开 admin/js/seed_data.js\n2. 在文件末尾添加粘贴的代码\n3. git commit && git push', {time: 5000});
 	});
 }
 </script>

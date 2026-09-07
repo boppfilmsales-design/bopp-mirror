@@ -187,14 +187,22 @@
             url: 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/admin/js/seed_data.js',
             headers: { 'Authorization': 'token ' + config.token },
             success: function(fileData) {
-                // 解码 base64 内容
-                var content = atob(fileData.content);
-                var sha = fileData.sha;
+                // 解码 base64 内容（GitHub API 返回 UTF-8 编码的 base64）
+                try {
+                    var content = decodeURIComponent(escape(window.atob(fileData.content)));
+                    var sha = fileData.sha;
+                } catch(e) {
+                    showStatus('❌ 解码文件失败：' + e.message, 'error');
+                    addLog(false, '解码失败 - ' + e.message);
+                    return;
+                }
 
                 // 解析并合并 overrides
-                var seedMatch = content.match(/var XGXCMS_SEED\s*=\s*(\{.*?\})\s*;/s);
+                // 使用 [\s\S] 匹配包括换行符的所有字符（JavaScript 没有 /s 标志）
+                var seedMatch = content.match(/var XGXCMS_SEED\s*=\s*(\{[\s\S]*?\})\s*;/);
                 if(!seedMatch) {
-                    showStatus('❌ 无法解析 seed_data.js', 'error');
+                    showStatus('❌ 无法解析 seed_data.js，请检查文件格式', 'error');
+                    addLog(false, '解析失败 - 正则表达式未匹配');
                     return;
                 }
 
@@ -230,7 +238,7 @@
 
                     // 重新生成 seed_data.js
                     var newContent = content.replace(
-                        /var XGXCMS_SEED\s*=\s*\{.*?\};/s,
+                        /var XGXCMS_SEED\s*=\s*\{[\s\S]*?\};/s,
                         'var XGXCMS_SEED = ' + JSON.stringify(seedData, null, 2) + ';'
                     );
 

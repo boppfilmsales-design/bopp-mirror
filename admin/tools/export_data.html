@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>数据导出工具</title>
+    <link href="../css/admin.css" rel="stylesheet" type="text/css" />
+    <style>
+        body { padding: 20px; max-width: 900px; margin: 0 auto; }
+        .box { background: #f5f5f5; padding: 20px; margin: 15px 0; border-radius: 8px; }
+        .btn { background: #009688; color: #fff; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; border-radius: 4px; font-size: 14px; }
+        .btn:hover { background: #00796b; }
+        .btn-blue { background: #1E9FFF; }
+        .btn-blue:hover { background: #0082e6; }
+        .output { background: #fff; padding: 15px; margin: 10px 0; border: 1px solid #ddd; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; word-break: break-all; }
+        .success { color: #4caf50; padding: 10px; background: #e8f5e9; border-radius: 4px; }
+        .error { color: #f44336; padding: 10px; background: #ffebee; border-radius: 4px; }
+        .info { color: #2196f3; padding: 10px; background: #e3f2fd; border-radius: 4px; }
+        pre { margin: 0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>📤 数据同步工具</h1>
+    <p>将后台编辑的数据合并到 seed_data.js 并推送到线上</p>
+
+    <div class="box">
+        <h3>步骤 1: 检查待同步数据</h3>
+        <button class="btn" onclick="checkData()">检查数据</button>
+        <div id="dataStatus"></div>
+    </div>
+
+    <div class="box">
+        <h3>步骤 2: 生成合并脚本</h3>
+        <p>点击下方按钮，生成一个 Python 脚本，用于合并数据</p>
+        <button class="btn btn-blue" onclick="generateScript()">生成合并脚本</button>
+        <div id="scriptOutput" class="output" style="display:none;"></div>
+        <button class="btn" id="copyBtn" onclick="copyScript()" style="display:none;">复制到剪贴板</button>
+    </div>
+
+    <div class="box">
+        <h3>步骤 3: 运行合并脚本</h3>
+        <p>在浏览器控制台运行生成的脚本，或手动操作：</p>
+        <ol>
+            <li>下载生成的 Python 脚本</li>
+            <li>运行: <code>python merge_overrides.py</code></li>
+            <li>脚本会自动更新 seed_data.js</li>
+            <li>然后执行: <code>git add -A && git commit -m "sync overrides" && git push</code></li>
+        </ol>
+    </div>
+
+    <div class="box">
+        <h3>步骤 4: 验证</h3>
+        <p>推送后等待 1-2 分钟，访问产品页面验证更新</p>
+        <a href="https://bopp-mirror-apigcl.pages.dev/product/205.html" target="_blank">验证产品 205</a> |
+        <a href="https://bopp-mirror-apigcl.pages.dev/product/431.html" target="_blank">验证产品 431</a>
+    </div>
+
+    <script>
+    function checkData() {
+        var overrides = {};
+        try {
+            overrides = JSON.parse(localStorage.getItem('_xgxcms_overrides_') || '{}');
+        } catch(e) {}
+
+        var status = document.getElementById('dataStatus');
+        if (!Object.keys(overrides).length) {
+            status.innerHTML = '<div class="error">⚠️ 当前没有待同步的数据，请先在后台编辑并保存</div>';
+            return;
+        }
+
+        var summary = [];
+        for (var cid in overrides) {
+            for (var iid in overrides[cid]) {
+                if (overrides[cid][iid]) {
+                    summary.push('c_id=' + cid + ', i_id=' + iid + ', title=' + overrides[cid][iid].title);
+                }
+            }
+        }
+
+        status.innerHTML = '<div class="success">✅ 发现 ' + summary.length + ' 条待同步数据:<br>' + summary.join('<br>') + '</div>';
+        window._overridesData = overrides;
+    }
+
+    function generateScript() {
+        if (!window._overridesData || !Object.keys(window._overridesData).length) {
+            alert('请先点击"检查数据"按钮');
+            return;
+        }
+
+        var overrides = window._overridesData;
+        var overridesJson = JSON.stringify(overrides, null, 2);
+
+        var script = `#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+自动合并 overrides 到 seed_data.js
+运行: python merge_overrides.py
+"""
+import json
+import re
+import sys
+from pathlib import Path
+
+# overrides 数据 (从浏览器导出)
+OVERRIDES = ${overridesJson}
+
+def merge_overrides():
+    """合并 overrides 到 seed_data.js"""
+    seed_file = Path('admin/js/seed_data.js')
+
+    # 读取 seed_data.js
+    content = seed_file.read_text(encoding='utf-8')
+
+    # 解析 JSON
+    match = re.search(r'var XGXCMS_SEED\s*=\s*(\{.*?\})\s*;', content, re.DOTALL)
+    if not match:
+        print("❌ 无法解析 seed_data.js")
+        sys.exit(1)
+
+    seed_data = json.loads(match.group(1))
+
+    # 合并 overrides
+    for cid, items in OVERRIDES.items():
+        if cid not in seed_data:
+            seed_data[cid] = []
+        for iid, item in items.items():
+            if item is None:
+                seed_data[cid] = [x for x in seed_data[cid] if str(x.get('i_id')) != iid]
+            else:
+                found = False
+                for i, existing in enumerate(seed_data[cid]):
+                    if str(existing.get('i_id')) == iid:
+                        seed_data[cid][i] = item
+                        found = True
+                        break
+                if not found:
+                    seed_data[cid].append(item)
+
+    # 写回文件
+    new_content = content[:match.start(1)] + 'var XGXCMS_SEED = ' + json.dumps(seed_data, ensure_ascii=False, indent=2) + ';' + content[match.end(1):]
+    seed_file.write_text(new_content, encoding='utf-8')
+
+    print("✅ seed_data.js 已更新")
+    print("请执行以下命令推送:")
+    print("  git add -A")
+    print('  git commit -m "sync overrides"')
+    print("  git push")
+
+if __name__ == '__main__':
+    merge_overrides()
+`;
+
+        var output = document.getElementById('scriptOutput');
+        output.textContent = script;
+        output.style.display = 'block';
+        document.getElementById('copyBtn').style.display = 'inline-block';
+
+        // 同时创建下载链接
+        var blob = new Blob([script], { type: 'text/plain' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'merge_overrides.py';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function copyScript() {
+        var text = document.getElementById('scriptOutput').textContent;
+        navigator.clipboard.writeText(text).then(function() {
+            alert('✅ 脚本已复制到剪贴板！');
+        });
+    }
+
+    // 页面加载时检查数据
+    window.onload = function() {
+        checkData();
+    };
+    </script>
+</body>
+</html>

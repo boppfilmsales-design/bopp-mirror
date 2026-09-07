@@ -1,4 +1,4 @@
-var XGXCMS_SEED = var XGXCMS_SEED = {
+var XGXCMS_SEED = {
   "1": [
     {
       "i_id": 336,

@@ -1,0 +1,22 @@
+{
+  "33": {
+    "431": {
+      "i_id": 431,
+      "title": "BOPP color printed film - 后台更新版",
+      "sub_title": "更新后的副标题",
+      "pic": "../upload/image/20211220/20211220211501_55505.jpg",
+      "content": "<p>这是后台更新后的产品内容</p>",
+      "code": "BOPP-CP-UPDATED",
+      "price": "$2000/ton",
+      "tech_params": "<p>更新后的技术参数</p>",
+      "helpful_links": "<a href=\"#\">更新链接</a>",
+      "album": [
+        "../upload/image/20211220/20211220211501_55505.jpg"
+      ],
+      "seo_title": "更新后 SEO 标题",
+      "seo_keywords": "BOPP, updated",
+      "seo_description": "更新后的描述",
+      "addtime": "2026-09-07 12:00:00"
+    }
+  }
+}

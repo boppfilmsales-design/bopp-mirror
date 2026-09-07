@@ -1,0 +1,103 @@
+name: Sync Overrides to seed_data.js
+
+on:
+  workflow_dispatch:
+    inputs:
+      overrides:
+        description: 'Overrides JSON data'
+        required: true
+      commit_message:
+        description: 'Commit message'
+        required: false
+        default: 'Auto sync overrides from admin'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Validate overrides JSON
+        run: |
+          echo "${{ github.event.inputs.overrides }}" | jq . > /tmp/overrides.json
+          echo "Overrides validated successfully"
+
+      - name: Update seed_data.js
+        run: |
+          # Read the current seed_data.js
+          SEED_FILE="admin/js/seed_data.js"
+
+          # Read overrides
+          OVERIDES=$(cat /tmp/overrides.json)
+
+          # Create a Python script to merge overrides
+          python3 << PYTHON_SCRIPT
+          import json
+          import re
+          import sys
+
+          # Read seed_data.js
+          with open('$SEED_FILE', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          # Parse the existing seed data
+          match = re.search(r'var XGXCMS_SEED\s*=\s*(\{.*?\})\s*;', content, re.DOTALL)
+          if not match:
+              print("ERROR: Could not find XGXCMS_SEED in seed_data.js")
+              sys.exit(1)
+
+          # Parse JSON
+          seed_json = json.loads(match.group(1))
+
+          # Load overrides
+          overrides = json.loads('''$OVERIDES''')
+
+          # Merge overrides into seed
+          for cid, items in overrides.items():
+              if cid not in seed_json:
+                  seed_json[cid] = []
+              for iid, item in items.items():
+                  if item is None:
+                      # Remove item
+                      seed_json[cid] = [x for x in seed_json[cid] if str(x.get('i_id')) != iid]
+                  else:
+                      # Add or update item
+                      found = False
+                      for i, existing in enumerate(seed_json[cid]):
+                          if str(existing.get('i_id')) == iid:
+                              seed_json[cid][i] = item
+                              found = True
+                              break
+                      if not found:
+                          seed_json[cid].append(item)
+
+          # Serialize back to JS
+          new_seed = json.dumps(seed_json, ensure_ascii=False, indent=2)
+
+          # Replace in content
+          new_content = content[:match.start(1)] + 'var XGXCMS_SEED = ' + new_seed + ';' + content[match.end(1):]
+
+          # Write back
+          with open('$SEED_FILE', 'w', encoding='utf-8') as f:
+              f.write(new_content)
+
+          print("seed_data.js updated successfully")
+          PYTHON_SCRIPT
+
+      - name: Remove overrides from seed_data.js (keep in localStorage only)
+        run: |
+          # Remove any XGXCMS_OVERRIDES lines to avoid duplication
+          sed -i '/var XGXCMS_OVERRIDES/d' admin/js/seed_data.js
+          sed -i '/^});/d' admin/js/seed_data.js
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add admin/js/seed_data.js
+          git commit -m "${{ github.event.inputs.commit_message || 'Auto sync overrides to seed_data.js' }}" || echo "No changes to commit"
+          git push

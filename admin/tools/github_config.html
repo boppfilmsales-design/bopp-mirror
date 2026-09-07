@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>GitHub 自动同步配置</title>
+    <link href="../css/admin.css" rel="stylesheet" type="text/css" />
+    <script src="../js/jquery.min.js" type="text/javascript"></script>
+    <style>
+        .config-box { background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="nowplace">
+        <span class="nownavi">
+            当前位置：<cite>高级管理</cite>&gt;<cite>GitHub 自动同步</cite>
+        </span>
+    </div>
+
+    <div class="config-box">
+        <h3>🔧 GitHub 自动同步配置</h3>
+        <p>配置 GitHub Personal Access Token (PAT)，实现后台编辑自动同步到前端</p>
+
+        <div class="field-row">
+            <label>GitHub Token</label>
+            <input type="password" id="githubToken" class="layui-input" placeholder="输入 GitHub Personal Access Token">
+            <div class="hint">
+                如何获取：GitHub → Settings → Developer settings → Personal access tokens → Generate new token
+                <br>权限选择：repo (完整控制)
+            </div>
+        </div>
+
+        <div class="field-row">
+            <label>仓库信息</label>
+            <input type="text" id="repoOwner" class="layui-input" value="boppfilmsales-design" placeholder="仓库所有者">
+            <input type="text" id="repoName" class="layui-input" value="bopp-mirror" placeholder="仓库名称" style="margin-top:5px;">
+        </div>
+
+        <button class="layui-btn" onclick="testConnection()">测试连接</button>
+        <button class="layui-btn layui-btn-normal" onclick="saveConfig()">保存配置</button>
+
+        <div id="statusMsg" class="status info" style="display:none;"></div>
+    </div>
+
+    <div class="config-box">
+        <h3>📊 同步状态</h3>
+        <div id="syncLog" style="max-height:300px;overflow-y:auto;font-family:monospace;font-size:12px;background:#fff;padding:10px;border:1px solid #ddd;">
+            暂无同步记录
+        </div>
+    </div>
+
+    <script>
+    (function(){
+        // 加载配置
+        var config = JSON.parse(localStorage.getItem('github_sync_config') || '{}');
+        if(config.token) $('#githubToken').val(config.token);
+        if(config.owner) $('#repoOwner').val(config.owner);
+        if(config.repo) $('#repoName').val(config.repo);
+
+        // 加载同步日志
+        var logs = JSON.parse(localStorage.getItem('sync_logs') || '[]');
+        if(logs.length) {
+            $('#syncLog').html(logs.map(function(l){
+                return '<div style="padding:5px 0;border-bottom:1px solid #eee;">' +
+                       '<span style="color:#999;">' + l.time + '</span> - ' +
+                       (l.success ? '<span style="color:green;">✅</span>' : '<span style="color:red;">❌</span>') +
+                       ' ' + l.msg + '</div>';
+            }).join(''));
+        }
+    })();
+
+    function showStatus(msg, type) {
+        var el = $('#statusMsg');
+        el.text(msg).removeClass('success error info').addClass('status ' + type).show();
+        setTimeout(function(){ el.hide(); }, 5000);
+    }
+
+    function addLog(success, msg) {
+        var logs = JSON.parse(localStorage.getItem('sync_logs') || '[]');
+        logs.unshift({
+            time: new Date().toLocaleString('zh-CN'),
+            success: success,
+            msg: msg
+        });
+        if(logs.length > 50) logs = logs.slice(0, 50);
+        localStorage.setItem('sync_logs', JSON.stringify(logs));
+
+        var html = logs.map(function(l){
+            return '<div style="padding:5px 0;border-bottom:1px solid #eee;">' +
+                   '<span style="color:#999;">' + l.time + '</span> - ' +
+                   (l.success ? '<span style="color:green;">✅</span>' : '<span style="color:red;">❌</span>') +
+                   ' ' + l.msg + '</div>';
+        }).join('');
+        $('#syncLog').html(html);
+    }
+
+    function testConnection() {
+        var token = $('#githubToken').val().trim();
+        if(!token) {
+            showStatus('请输入 GitHub Token', 'error');
+            return;
+        }
+
+        $.ajax({
+            url: 'https://api.github.com/user',
+            headers: { 'Authorization': 'token ' + token },
+            success: function(data) {
+                showStatus('✅ 连接成功！用户：' + data.login, 'success');
+                addLog(true, '测试连接成功 - ' + data.login);
+            },
+            error: function(xhr) {
+                showStatus('❌ 连接失败：' + (xhr.responseJSON?.message || xhr.statusText), 'error');
+                addLog(false, '测试连接失败');
+            }
+        });
+    }
+
+    function saveConfig() {
+        var config = {
+            token: $('#githubToken').val().trim(),
+            owner: $('#repoOwner').val().trim() || 'boppfilmsales-design',
+            repo: $('#repoName').val().trim() || 'bopp-mirror'
+        };
+        localStorage.setItem('github_sync_config', JSON.stringify(config));
+        showStatus('✅ 配置已保存', 'success');
+        addLog(true, '配置已保存');
+    }
+
+    // 全局导出供后台调用
+    window.githubSync = {
+        test: testConnection,
+        save: saveConfig,
+        getConfig: function() {
+            return JSON.parse(localStorage.getItem('github_sync_config') || '{}');
+        }
+    };
+    </script>
+</body>
+</html>

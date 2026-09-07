@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html data-cms="16">
+<head><title>Test Sync</title></head>
+<body>
+<h2>Before sync:</h2>
+<article class="n_article"><h1 id="before-title">原始标题</h1></article>
+<article class="ar_article">
+<div style="min-height:500px" id="before-body"><p>原始正文</p></div>
+</article>
+
+<h2>After sync (check console):</h2>
+<article class="n_article"><h1 id="after-title"></h1></article>
+<article class="ar_article">
+<div style="min-height:500px" id="after-body"></div>
+</article>
+
+<script>
+// 模拟后台保存数据到 localStorage
+const overrides = {
+  "13": {
+    "16": {
+      i_id: 16,
+      title: "后台更新标题-亚太工业集团",
+      content: "<p>后台更新正文-这是一份专业的公司介绍内容</p>",
+      addtime: "2026-09-07 11:30:00"
+    }
+  }
+};
+localStorage.setItem("_xgxcms_overrides_", JSON.stringify(overrides));
+
+// 模拟 seed_data
+var XGXCMS_SEED = {
+  "13": [{
+    i_id: 16,
+    title: "原始标题",
+    content: "<p>原始正文</p>"
+  }]
+};
+</script>
+<script src="admin/js/page_sync.js"></script>
+<script>
+setTimeout(() => {
+  const h1 = document.querySelector("article.n_article h1");
+  const body = document.querySelector("article.ar_article > div[style*=min-height]");
+  
+  console.log("=== 同步结果 ===");
+  console.log("h1 元素:", h1 ? "存在" : "不存在");
+  console.log("body 元素:", body ? "存在" : "不存在");
+  console.log("h1 内容:", h1 ? h1.innerHTML : "N/A");
+  console.log("body 内容:", body ? body.innerHTML : "N/A");
+  
+  if (h1 && h1.innerHTML === "后台更新标题-亚太工业集团") {
+    console.log("✅ 标题同步成功");
+  } else {
+    console.log("❌ 标题同步失败");
+  }
+  
+  if (body && body.innerHTML === "<p>后台更新正文-这是一份专业的公司介绍内容</p>") {
+    console.log("✅ 正文同步成功");
+  } else {
+    console.log("❌ 正文同步失败");
+  }
+}, 200);
+</script>
+</body>
+</html>

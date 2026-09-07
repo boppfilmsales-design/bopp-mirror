@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html data-cms="16">
+<head><title>Test</title></head>
+<body>
+<h1>Before sync</h1>
+<article class="n_article"><h1>原标题</h1></article>
+<article class="ar_article">
+<ul class="ar_article_name"><li>test</li></ul>
+<div style="min-height:500px; line-height:220%; margin:50px 0;">
+<p>原始正文内容</p>
+</div>
+</article>
+<script>
+const overrides = {
+  '13': {
+    '16': {
+      i_id: 16,
+      title: '测试标题-后台已更新',
+      pic: '',
+      content: '<p>后台更新后的正文内容</p>',
+      addtime: '2026-09-07 10:00:00'
+    }
+  }
+};
+localStorage.setItem('_xgxcms_overrides_', JSON.stringify(overrides));
+
+const XGXCMS_SEED = {
+  '13': [
+    { i_id: 16, title: '原始标题', pic: '', content: '<p>原始正文内容</p>' }
+  ]
+};
+</script>
+<script src="admin/js/page_sync.js"></script>
+<script>
+setTimeout(() => {
+  const h1 = document.querySelector('article.n_article h1');
+  const body = document.querySelector('article.ar_article > div[style*=min-height]');
+  console.log('h1:', h1 ? h1.innerHTML : 'NOT FOUND');
+  console.log('body:', body ? body.innerHTML : 'NOT FOUND');
+  if (h1 && h1.innerHTML === '测试标题-后台已更新') {
+    console.log('SUCCESS: Title sync OK');
+  } else {
+    console.log('FAIL: Title NOT synced');
+  }
+  if (body && body.innerHTML === '<p>后台更新后的正文内容</p>') {
+    console.log('SUCCESS: Content sync OK');
+  } else {
+    console.log('FAIL: Content NOT synced');
+    if (body) console.log('Actual:', body.innerHTML.substring(0, 50));
+  }
+}, 100);
+</script>
+</body>
+</html>

@@ -182,30 +182,92 @@
         showStatus('🔄 正在同步...', 'info');
         addLog(true, '开始同步 ' + Object.keys(overrides).length + ' 个栏目');
 
-        // 调用 GitHub Actions API
+        // 获取当前 seed_data.js
         $.ajax({
-            url: 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/actions/workflows/sync.yml/dispatches',
-            type: 'POST',
-            headers: {
-                'Authorization': 'token ' + config.token,
-                'Accept': 'application/vnd.github.v3+json'
-            },
-            data: JSON.stringify({
-                ref: 'main',
-                inputs: {
-                    overrides: JSON.stringify(overrides),
-                    commit_message: 'Auto sync from admin - ' + new Date().toLocaleString('zh-CN')
+            url: 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/admin/js/seed_data.js',
+            headers: { 'Authorization': 'token ' + config.token },
+            success: function(fileData) {
+                // 解码 base64 内容
+                var content = atob(fileData.content);
+                var sha = fileData.sha;
+
+                // 解析并合并 overrides
+                var seedMatch = content.match(/var XGXCMS_SEED\s*=\s*(\{.*?\})\s*;/s);
+                if(!seedMatch) {
+                    showStatus('❌ 无法解析 seed_data.js', 'error');
+                    return;
                 }
-            }),
-            contentType: 'application/json',
-            success: function(data) {
-                showStatus('✅ 同步请求已发送！GitHub Actions 正在处理，预计 1-2 分钟生效', 'success');
-                addLog(true, '同步请求已发送，Workflow ID: ' + (data.workflow_run_id || 'N/A'));
+
+                try {
+                    var seedData = JSON.parse(seedMatch[1]);
+
+                    // 合并 overrides
+                    for(var cid in overrides) {
+                        if(!seedData[cid]) seedData[cid] = [];
+                        for(var iid in overrides[cid]) {
+                            var item = overrides[cid][iid];
+                            if(!item) {
+                                // 删除
+                                seedData[cid] = seedData[cid].filter(function(x) {
+                                    return String(x.i_id) !== iid;
+                                });
+                            } else {
+                                // 添加或更新
+                                var found = false;
+                                for(var i = 0; i < seedData[cid].length; i++) {
+                                    if(String(seedData[cid][i].i_id) === iid) {
+                                        seedData[cid][i] = item;
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if(!found) {
+                                    seedData[cid].push(item);
+                                }
+                            }
+                        }
+                    }
+
+                    // 重新生成 seed_data.js
+                    var newContent = content.replace(
+                        /var XGXCMS_SEED\s*=\s*\{.*?\};/s,
+                        'var XGXCMS_SEED = ' + JSON.stringify(seedData, null, 2) + ';'
+                    );
+
+                    // 更新文件
+                    $.ajax({
+                        url: 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/admin/js/seed_data.js',
+                        type: 'PUT',
+                        headers: {
+                            'Authorization': 'token ' + config.token,
+                            'Accept': 'application/vnd.github.v3+json'
+                        },
+                        data: JSON.stringify({
+                            message: 'Auto sync from admin - ' + new Date().toLocaleString('zh-CN'),
+                            content: btoa(unescape(encodeURIComponent(newContent))),
+                            sha: sha
+                        }),
+                        success: function(data) {
+                            showStatus('✅ 同步成功！正在重新构建，预计 1-2 分钟生效', 'success');
+                            addLog(true, '同步成功 - seed_data.js 已更新');
+                            // 清空 localStorage
+                            localStorage.removeItem('_xgxcms_overrides_');
+                        },
+                        error: function(xhr) {
+                            var msg = xhr.responseJSON?.message || xhr.statusText;
+                            showStatus('❌ 更新失败：' + msg, 'error');
+                            addLog(false, '更新失败 - ' + msg);
+                        }
+                    });
+                } catch(e) {
+                    showStatus('❌ 数据处理失败：' + e.message, 'error');
+                    addLog(false, '数据处理失败 - ' + e.message);
+                }
             },
             error: function(xhr) {
                 var msg = xhr.responseJSON?.message || xhr.statusText;
-                showStatus('❌ 同步失败：' + msg, 'error');
-                addLog(false, '同步失败 - ' + msg);
+                showStatus('❌ 获取文件失败：' + msg, 'error');
+                addLog(false, '获取文件失败 - ' + msg);
             }
         });
     }

@@ -85,9 +85,16 @@
   <div class="field-group">
     <h4>相册</h4>
     <div class="field-row">
-      <label>相册图片 (JSON 数组)</label>
-      <textarea id="album" style="height:100px;font-family:monospace;" placeholder='["../upload/image/1.jpg","../upload/image/2.jpg"]'></textarea>
-      <div class="hint">多个图片路径，JSON 数组格式</div>
+      <label>相册图片</label>
+      <input type="file" id="albumFile" accept="image/*" multiple style="display:none;">
+      <button type="button" class="layui-btn layui-btn-sm" onclick="$('#albumFile').trigger('click')">选择图片上传</button>
+      <span style="color:#999;font-size:12px;margin-left:10px;">可选择多张图片，支持拖拽排序</span>
+      <div id="albumPreview" style="margin-top:10px;min-height:50px;"></div>
+    </div>
+    <div class="field-row">
+      <label>图片路径 (JSON 数组)</label>
+      <textarea id="album" style="height:80px;font-family:monospace;" placeholder='["../upload/image/1.jpg","../upload/image/2.jpg"]'></textarea>
+      <div class="hint">上传图片后自动生成，也可直接编辑</div>
     </div>
   </div>
 
@@ -153,6 +160,85 @@ document.getElementById('imgFile').addEventListener('change', function(){
 	};
 	rd.readAsDataURL(f);
 });
+// 相册图片上传和预览
+(function(){
+	var albumFileInput = document.getElementById('albumFile');
+	var albumTextarea = document.getElementById('album');
+	var albumPreview = document.getElementById('albumPreview');
+	if(!albumFileInput || !albumTextarea) return;
+	// 初始化预览
+	function renderPreview(){
+		var val = $.trim(albumTextarea.value);
+		var urls = [];
+		if(val){
+			try{ urls = JSON.parse(val); }catch(e){}
+		}
+		albumPreview.innerHTML = '';
+		if(!urls.length) return;
+		var gallery = document.createElement('div');
+		gallery.style.cssText = 'display:flex;flex-wrap:wrap;gap:10px;';
+		urls.forEach(function(url, idx){
+			var wrap = document.createElement('div');
+			wrap.style.cssText = 'position:relative;width:80px;height:80px;';
+			var img = document.createElement('img');
+			img.src = url;
+			img.style.cssText = 'width:80px;height:80px;object-fit:cover;border:1px solid #ddd;';
+			var del = document.createElement('span');
+			del.textContent = '×';
+			del.style.cssText = 'position:absolute;top:-5px;right:-5px;width:18px;height:18px;line-height:18px;text-align:center;background:#f00;color:#fff;border-radius:50%;cursor:pointer;font-size:14px;';
+			del.onclick = function(){
+				urls.splice(idx, 1);
+				albumTextarea.value = JSON.stringify(urls, null, 2);
+				renderPreview();
+			};
+			wrap.appendChild(img);
+			wrap.appendChild(del);
+			gallery.appendChild(wrap);
+		});
+		albumPreview.appendChild(gallery);
+	}
+	// 监听手动修改
+	albumTextarea.addEventListener('input', renderPreview);
+	// 文件选择上传
+	albumFileInput.addEventListener('change', function(){
+		var files = this.files;
+		if(!files.length) return;
+		var currentUrls = [];
+		try{ currentUrls = JSON.parse($.trim(albumTextarea.value) || '[]'); }catch(e){}
+		var remaining = 10 - currentUrls.length;
+		var toProcess = Array.from(files).slice(0, remaining || files.length);
+		if(!remaining && currentUrls.length){
+			layui.use('layer', function(){ layui.layer.msg('最多上传10张图片'); });
+			return;
+		}
+		var promises = toProcess.map(function(f){
+			return new Promise(function(resolve){
+				if(f.size > 2*1024*1024){
+					alert('图片 '+f.name+' 过大，请压缩到2MB内');
+					resolve(null);
+					return;
+				}
+				var rd = new FileReader();
+				rd.onload = function(){
+					// 由于是纯静态站，使用 base64 数据作为图片源
+					resolve(rd.result);
+				};
+				rd.readAsDataURL(f);
+			});
+		});
+		Promise.all(promises).then(function(results){
+			var valid = results.filter(Boolean);
+			if(!valid.length) return;
+			currentUrls = currentUrls.concat(valid);
+			albumTextarea.value = JSON.stringify(currentUrls, null, 2);
+			renderPreview();
+			$('#saveMsg').text('已添加 '+valid.length+' 张图片，请保存后生效');
+		});
+		this.value = '';
+	});
+	// 页面加载时初始化预览
+	renderPreview();
+})();
 function doSave(){
 	var title=$.trim($('#title').val());
 	if(!title){layui.use('layer',function(){layui.layer.msg('请填写标题');});return;}

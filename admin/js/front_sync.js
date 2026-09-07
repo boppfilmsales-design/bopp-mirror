@@ -1,6 +1,9 @@
 /* 前端同步：读取后台数据（基础+覆盖）覆盖当前 product/N.html 内容 */
 (function(){
+	// 优先使用 cms_getItemByIid（支持 overrides），否则回退到本地实现
 	function getItemByIid(iid){
+		if(typeof cms_getItemByIid === 'function') return cms_getItemByIid(iid);
+		// 回退实现
 		var ov=null;
 		try{ ov=JSON.parse(localStorage.getItem('_xgxcms_overrides_')||'{}'); }catch(e){}
 		if(ov){

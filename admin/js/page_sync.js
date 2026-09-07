@@ -3,7 +3,10 @@
  * 选择器针对 about 类页：article.n_article h1（标题）、article.ar_article > div[style*="min-height"]（正文）
  */
 (function(){
+	// 优先使用 cms_getItemByIid（支持 overrides），否则回退到本地实现
 	function getItemByIid(iid){
+		if(typeof cms_getItemByIid === 'function') return cms_getItemByIid(iid);
+		// 回退实现
 		var ov=null;
 		try{ ov=JSON.parse(localStorage.getItem('_xgxcms_overrides_')||'{}'); }catch(e){}
 		if(ov){

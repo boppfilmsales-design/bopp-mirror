@@ -9,6 +9,11 @@ import re
 import sys
 from pathlib import Path
 
+# 设置 UTF-8 输出（解决 Windows GBK 编码问题）
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
 # overrides 数据 (从浏览器导出，替换这里的内容)
 OVERRIDES = {}
 

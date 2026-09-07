@@ -191,6 +191,7 @@
                 'Accept': 'application/vnd.github.v3+json'
             },
             data: JSON.stringify({
+                ref: 'main',
                 inputs: {
                     overrides: JSON.stringify(overrides),
                     commit_message: 'Auto sync from admin - ' + new Date().toLocaleString('zh-CN')

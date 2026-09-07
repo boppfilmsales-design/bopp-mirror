@@ -187,9 +187,15 @@
             url: 'https://api.github.com/repos/' + config.owner + '/' + config.repo + '/contents/admin/js/seed_data.js',
             headers: { 'Authorization': 'token ' + config.token },
             success: function(fileData) {
-                // 解码 base64 内容（GitHub API 返回 UTF-8 编码的 base64）
+                // 解码 base64 内容（兼容所有浏览器）
                 try {
-                    var content = decodeURIComponent(escape(window.atob(fileData.content)));
+                    var base64Content = fileData.content.replace(/\n/g, '');
+                    var binaryString = atob(base64Content);
+                    var bytes = new Uint8Array(binaryString.length);
+                    for (var i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    var content = new TextDecoder('utf-8').decode(bytes);
                     var sha = fileData.sha;
                 } catch(e) {
                     showStatus('❌ 解码文件失败：' + e.message, 'error');
@@ -199,12 +205,16 @@
 
                 // 解析并合并 overrides
                 // 使用 [\s\S] 匹配包括换行符的所有字符（JavaScript 没有 /s 标志）
+                // 注意：JSON 数据可能很大 (3MB+)，需要确保正则能正确处理
                 var seedMatch = content.match(/var XGXCMS_SEED\s*=\s*(\{[\s\S]*?\})\s*;/);
                 if(!seedMatch) {
                     showStatus('❌ 无法解析 seed_data.js，请检查文件格式', 'error');
-                    addLog(false, '解析失败 - 正则表达式未匹配');
+                    addLog(false, '解析失败 - 正则未匹配 (内容长度:' + content.length + ')');
+                    console.log('Content preview:', content.substring(0, 200));
+                    console.log('Content suffix:', content.substring(content.length - 200));
                     return;
                 }
+                console.log('Regex matched, JSON length:', seedMatch[1].length);
 
                 try {
                     var seedData = JSON.parse(seedMatch[1]);

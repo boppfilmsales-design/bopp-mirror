@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>D1 数据同步</title>
+    <link href="../css/admin.css" rel="stylesheet" type="text/css" />
+    <script src="../js/jquery.min.js" type="text/javascript"></script>
+    <style>
+        .sync-box { background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .log { max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; background: #fff; padding: 10px; border: 1px solid #ddd; }
+        .log div { padding: 5px 0; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+    <div class="nowplace">
+        <span class="nownavi">
+            当前位置：<cite>高级管理</cite>&gt;<cite>D1 数据同步</cite>
+        </span>
+    </div>
+
+    <div class="sync-box">
+        <h3>🔄 D1 数据库同步</h3>
+        <p>将后台修改的数据同步到 Cloudflare D1 数据库</p>
+
+        <button class="layui-btn" onclick="syncToD1()">🚀 立即同步到 D1</button>
+        <button class="layui-btn layui-btn-primary" onclick="testConnection()">测试连接</button>
+
+        <div id="statusMsg" class="status info" style="display:none;"></div>
+    </div>
+
+    <div class="sync-box">
+        <h3>📊 同步日志</h3>
+        <div id="syncLog" class="log">
+            <div>暂无同步记录</div>
+        </div>
+        <button class="layui-btn layui-btn-sm" onclick="clearLogs()">清空日志</button>
+    </div>
+
+    <div class="sync-box">
+        <h3>📖 使用说明</h3>
+        <ol>
+            <li>在后台编辑产品/内容，点击"保存"</li>
+            <li>回到"D1 数据同步"页面，点击"立即同步到 D1"</li>
+            <li>系统会自动将修改上传到 Cloudflare D1 数据库</li>
+            <li>前端页面会自动从 API 读取最新数据</li>
+        </ol>
+        <p><strong>注意</strong>：此功能需要将网站前端改为从 API 读取数据。</p>
+    </div>
+
+    <script>
+    var API_BASE = 'https://bopp-cms-api.boppfilmsales.workers.dev';
+
+    function showStatus(msg, type) {
+        var el = $('#statusMsg');
+        el.text(msg).removeClass('success error info').addClass('status ' + type).show();
+        setTimeout(function(){ el.hide(); }, 8000);
+    }
+
+    function addLog(success, msg) {
+        var logs = JSON.parse(localStorage.getItem('sync_logs_d1') || '[]');
+        logs.unshift({
+            time: new Date().toLocaleString('zh-CN'),
+            success: success,
+            msg: msg
+        });
+        if(logs.length > 50) logs = logs.slice(0, 50);
+        localStorage.setItem('sync_logs_d1', JSON.stringify(logs));
+
+        var html = logs.map(function(l){
+            return '<div style="padding:3px 0;border-bottom:1px solid #eee;">' +
+                   '<span style="color:#999;">' + l.time + '</span> - ' +
+                   (l.success ? '<span style="color:green;">✅</span>' : '<span style="color:red;">❌</span>') +
+                   ' ' + l.msg + '</div>';
+        }).join('');
+        $('#syncLog').html(html);
+    }
+
+    function clearLogs() {
+        localStorage.removeItem('sync_logs_d1');
+        $('#syncLog').html('<div>日志已清空</div>');
+    }
+
+    function testConnection() {
+        showStatus('🔄 测试连接中...', 'info');
+        $.ajax({
+            url: API_BASE + '/api/categories',
+            success: function(data) {
+                showStatus('✅ 连接成功！共 ' + data.data.length + ' 个栏目', 'success');
+                addLog(true, '测试连接成功 - ' + data.data.length + ' 个栏目');
+            },
+            error: function(xhr) {
+                var msg = xhr.responseJSON?.message || xhr.statusText;
+                showStatus('❌ 连接失败：' + msg, 'error');
+                addLog(false, '测试连接失败 - ' + msg);
+            }
+        });
+    }
+
+    function syncToD1() {
+        // 读取 localStorage 中的 overrides
+        var overrides = {};
+        try {
+            overrides = JSON.parse(localStorage.getItem('_xgxcms_overrides_') || '{}');
+        } catch(e) {}
+
+        if(!Object.keys(overrides).length) {
+            showStatus('⚠️ 当前没有待同步的数据，请先在后台编辑并保存', 'error');
+            return;
+        }
+
+        showStatus('🔄 正在同步到 D1...', 'info');
+        addLog(true, '开始同步 ' + Object.keys(overrides).length + ' 个栏目');
+
+        var syncCount = 0;
+        var totalItems = 0;
+
+        for (var cid in overrides) {
+            var items = overrides[cid];
+            for (var iid in items) {
+                totalItems++;
+                var item = items[iid];
+
+                if (item === null) {
+                    // 删除操作
+                    $.ajax({
+                        url: API_BASE + '/api/items/' + iid,
+                        type: 'DELETE',
+                        success: function() {
+                            syncCount++;
+                            console.log('Deleted item', iid);
+                        },
+                        error: function(e) {
+                            console.error('Failed to delete item', iid, e);
+                        }
+                    });
+                } else {
+                    // 创建或更新
+                    var isUpdate = false;
+                    // 检查是否已存在
+                    $.ajax({
+                        url: API_BASE + '/api/items/' + iid,
+                        type: 'GET',
+                        async: false,
+                        success: function(res) {
+                            if (res.success && res.data) {
+                                isUpdate = true;
+                            }
+                        }
+                    });
+
+                    var data = {
+                        c_id: parseInt(cid),
+                        i_id: parseInt(iid),
+                        title: item.title,
+                        pic: item.pic,
+                        content: item.content,
+                        addtime: item.addtime || new Date().toISOString()
+                    };
+
+                    var url = isUpdate ? API_BASE + '/api/items/' + iid : API_BASE + '/api/items';
+                    var method = isUpdate ? 'PUT' : 'POST';
+
+                    $.ajax({
+                        url: url,
+                        type: method,
+                        contentType: 'application/json',
+                        data: JSON.stringify(data),
+                        success: function() {
+                            syncCount++;
+                            console.log('Synced item', iid);
+                        },
+                        error: function(e) {
+                            console.error('Failed to sync item', iid, e);
+                        }
+                    });
+                }
+            }
+        }
+
+        // 等待所有请求完成
+        setTimeout(function() {
+            showStatus('✅ 同步完成！共同步 ' + totalItems + ' 个条目', 'success');
+            addLog(true, '同步完成 - ' + totalItems + ' 个条目');
+            // 清空 localStorage
+            localStorage.removeItem('_xgxcms_overrides_');
+        }, 3000);
+    }
+    </script>
+</body>
+</html>

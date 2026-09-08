@@ -81,7 +81,7 @@ export default {
 
         const { meta } = await env.DB.prepare(
           'INSERT INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (?, ?, ?, ?, ?, ?)'
-        ).bind(c_id, nextId, title, pic, content, addtime || new Date().toISOString()).run();
+        ).bind(c_id, nextId, title || '', pic || '', content || '', addtime || new Date().toISOString()).run();
 
         return Response.json({ success: true, data: { i_id: nextId, ...meta } }, { headers: corsHeaders });
       }
@@ -93,7 +93,13 @@ export default {
 
         const { changes } = await env.DB.prepare(`
           UPDATE cms_items SET title=?, pic=?, content=?, addtime=? WHERE i_id=?
-        `).bind(body.title, body.pic, body.content, body.addtime || new Date().toISOString(), iId).run();
+        `).bind(
+          body.title || '',
+          body.pic || '',
+          body.content || '',
+          body.addtime || new Date().toISOString(),
+          iId
+        ).run();
 
         if (!changes) {
           return Response.json({ success: false, error: 'Not found' }, { status: 404, headers: corsHeaders });
@@ -114,6 +120,63 @@ export default {
         }
 
         return Response.json({ success: true, changes }, { headers: corsHeaders });
+      }
+
+      // POST /api/items/bulk - 批量更新（用于后台保存）
+      if (path === '/api/items/bulk' && request.method === 'POST') {
+        const body = await request.json();
+        const { c_id, items } = body;
+
+        if (!c_id || !items || !Array.isArray(items)) {
+          return Response.json({ success: false, error: 'Invalid params' }, { status: 400, headers: corsHeaders });
+        }
+
+        const results = [];
+        for (const item of items) {
+          if (item._deleted) {
+            // 删除
+            const { changes } = await env.DB.prepare(
+              'DELETE FROM cms_items WHERE i_id = ? AND c_id = ?'
+            ).bind(item.i_id, c_id).run();
+            if (changes) results.push({ i_id: item.i_id, action: 'deleted' });
+          } else {
+            // 检查是否存在
+            const { results: existing } = await env.DB.prepare(
+              'SELECT i_id FROM cms_items WHERE i_id = ? AND c_id = ?'
+            ).bind(item.i_id, c_id).all();
+
+            if (existing.length > 0) {
+              // 更新
+              const { changes } = await env.DB.prepare(`
+                UPDATE cms_items SET title=?, pic=?, content=?, addtime=? WHERE i_id=? AND c_id=?
+              `).bind(
+                item.title || '',
+                item.pic || '',
+                item.content || '',
+                item.addtime || new Date().toISOString(),
+                item.i_id,
+                c_id
+              ).run();
+              if (changes) results.push({ i_id: item.i_id, action: 'updated' });
+            } else {
+              // 插入新条目
+              const nextId = await getNextId(env, c_id);
+              await env.DB.prepare(
+                'INSERT INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (?, ?, ?, ?, ?, ?)'
+              ).bind(
+                c_id,
+                nextId,
+                item.title || '',
+                item.pic || '',
+                item.content || '',
+                item.addtime || new Date().toISOString()
+              ).run();
+              results.push({ i_id: nextId, action: 'created' });
+            }
+          }
+        }
+
+        return Response.json({ success: true, data: results, count: results.length }, { headers: corsHeaders });
       }
 
       // GET /api/categories - 获取所有栏目统计

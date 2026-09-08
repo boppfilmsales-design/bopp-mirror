@@ -10,6 +10,8 @@
 <script src="js/admin.js" type="text/javascript"></script>
 <script src="js/seed_data.js" type="text/javascript"></script>
 <script src="js/cms.js" type="text/javascript"></script>
+<script src="js/d1-cms.js" type="text/javascript"></script>
+<script src="js/cms.js" type="text/javascript"></script>
 <style>
 .field-group{margin-bottom:20px;padding:15px;background:#f8f8f8;border-radius:4px;}
 .field-group h4{margin:0 0 15px 0;color:#333;border-bottom:1px solid #ddd;padding-bottom:8px;}
@@ -262,22 +264,31 @@ function doSave(){
 		try{ item.album=JSON.parse(albumVal); }catch(e){ item.album=[]; }
 	}
 	var isNew = !iid;
-	if(isNew){ CMS.addInfo(cid,item); }
-	else{ item.i_id=iid; CMS.updInfo(cid,iid,item); }
-	// 校验写入成功
-	var checkId = isNew ? item.i_id : iid;
-	var chk=CMS.getInfo(cid, checkId);
-	layui.use('layer',function(){ var layer=layui.layer;
-		if(chk && chk.title===title){
-			$('#saveMsg').text('保存成功');
-			layer.msg('保存成功',{time:1200},function(){ location.href='info_list.html?c_id='+cid; });
-		}else{
-			// 如果校验失败，尝试直接跳转
-			console.log('Save check failed, but continuing...', chk, title);
-			$('#saveMsg').text('保存成功（已写入本地存储）');
-			layer.msg('保存成功',{time:1200},function(){ location.href='info_list.html?c_id='+cid; });
-		}
-	});
+	if(isNew){
+		// 新增：直接保存到 D1
+		D1CMS.addInfo(cid, item).then(function(saved){
+			layui.use('layer',function(){ var layer=layui.layer;
+				$('#saveMsg').text('保存成功');
+				layer.msg('保存成功',{time:1200},function(){ location.href='info_list.html?c_id='+cid; });
+			});
+		}).catch(function(e){
+			layui.use('layer',function(){ var layer=layui.layer;
+				layer.msg('保存失败：'+e.message, {icon:2});
+			});
+		});
+	}else{
+		// 编辑：直接保存到 D1
+		D1CMS.updInfo(cid, iid, item).then(function(){
+			layui.use('layer',function(){ var layer=layui.layer;
+				$('#saveMsg').text('保存成功');
+				layer.msg('保存成功',{time:1200},function(){ location.href='info_list.html?c_id='+cid; });
+			});
+		}).catch(function(e){
+			layui.use('layer',function(){ var layer=layui.layer;
+				layer.msg('保存失败：'+e.message, {icon:2});
+			});
+		});
+	}
 }
 </script>
 </body>

@@ -1,0 +1,1 @@
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (111, 355, 'PE Shopping bags', '../upload/image/20181227/20181227134057_41610.jpg', '<p>PE Shopping bags</p>', '2026-09-06 20:58:45');

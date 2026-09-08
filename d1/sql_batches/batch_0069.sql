@@ -1,0 +1,2 @@
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (106, 346, 'VMCPP film-Silver metallized CPP film', '../upload/image/no-photo.png', '<p><em>VMCPP film-Silver metallized CPP film</em></p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (106, 435, 'VMCPP film', '../upload/image/no-photo.png', '<p><span style="color:#009688;font-family:&quot;font-size:14px;background-color:#F2F2F2;">VMCPP film</span></p>', '2026-09-06 20:58:45');

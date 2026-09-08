@@ -37,24 +37,29 @@ function extractSeedData() {
     return JSON.parse(jsonStr);
 }
 
-// 生成 INSERT SQL
-function generateInsertSQL(seedData) {
-    const rows = [];
+// 生成 INSERT SQL（分批）
+function generateInsertSQL(seedData, batchSize = 100) {
+    const batches = [];
     let totalItems = 0;
 
     for (const [cId, items] of Object.entries(seedData)) {
-        for (const item of items) {
-            const safeContent = (item.content || '').replace(/'/g, "''");
-            const safeTitle = (item.title || '').replace(/'/g, "''");
-            const safePic = (item.pic || '').replace(/'/g, "''");
-            const safeAddtime = item.addtime || new Date().toISOString();
+        for (let i = 0; i < items.length; i += batchSize) {
+            const batch = items.slice(i, i + batchSize);
+            const rows = [];
+            for (const item of batch) {
+                const safeContent = (item.content || '').replace(/'/g, "''");
+                const safeTitle = (item.title || '').replace(/'/g, "''");
+                const safePic = (item.pic || '').replace(/'/g, "''");
+                const safeAddtime = item.addtime || new Date().toISOString();
 
-            rows.push(`INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (${cId}, ${item.i_id}, '${safeTitle}', '${safePic}', '${safeContent}', '${safeAddtime}');`);
-            totalItems++;
+                rows.push(`INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (${cId}, ${item.i_id}, '${safeTitle}', '${safePic}', '${safeContent}', '${safeAddtime}');`);
+                totalItems++;
+            }
+            batches.push(rows.join('\n'));
         }
     }
 
-    return { sql: rows.join('\n'), totalItems };
+    return { sql: batches, totalItems };
 }
 
 async function main() {
@@ -66,19 +71,22 @@ async function main() {
     const { sql, totalItems } = generateInsertSQL(seedData);
 
     if (DRY_RUN) {
-        console.log(`\n📝 [DRY RUN] 将执行 ${totalItems} 条 INSERT`);
-        console.log('\n前 5 条 SQL:');
-        console.log(sql.split('\n').slice(0, 5).join('\n'));
-        console.log('\n后 5 条 SQL:');
-        console.log(sql.split('\n').slice(-5).join('\n'));
-        console.log(`\nSQL 文件大小: ${(sql.length / 1024).toFixed(1)} KB`);
+        console.log(`\n📝 [DRY RUN] 将执行 ${totalItems} 条 INSERT（分批 ${sql.length} 批）`);
+        console.log('\n第 1 批 SQL (前 5 条):');
+        console.log(sql[0].split('\n').slice(0, 5).join('\n'));
+        console.log(`\nSQL 文件总数: ${sql.length} 批`);
     } else {
-        // 写入 SQL 文件（可手动执行）
-        const sqlFile = path.join('d1', 'seed_data_insert.sql');
-        fs.writeFileSync(sqlFile, sql, 'utf8');
-        console.log(`\n✅ SQL 文件已生成: ${sqlFile}`);
+        // 保存每批 SQL 到单独文件
+        const sqlDir = path.join(PROJECT_ROOT, 'd1', 'sql_batches');
+        if (!fs.existsSync(sqlDir)) {
+            fs.mkdirSync(sqlDir, { recursive: true });
+        }
+        sql.forEach((batch, idx) => {
+            fs.writeFileSync(path.join(sqlDir, `batch_${String(idx + 1).padStart(4, '0')}.sql`), batch, 'utf8');
+        });
+        console.log(`\n✅ SQL 文件已生成: ${sqlDir}`);
         console.log(`📝 共 ${totalItems} 条 INSERT 语句`);
-        console.log(`📦 文件大小: ${(sql.length / 1024).toFixed(1)} KB`);
+        console.log(`📦 分成 ${sql.length} 个批次文件`);
     }
 }
 

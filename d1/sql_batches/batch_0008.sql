@@ -1,0 +1,12 @@
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 221, 'give advise to seller  送给卖家建议和意见', '../', '<p>give advise to seller 送给卖家建议和意见</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 220, 'Send inquiry 发送询盘给卖家', '../', '<p>Send inquiry 发送询盘给卖家</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 219, 'get contact, 得到联系方式', '../', '<p></p><p>get contact, 得到联系方式</p> <p><img alt="" src="../upload/image/20180904/20180904141847_12065.jpg"/></p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 119, 'Tel', '../', '<p>86-551-64687285</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 120, 'Fax', '../', '<p>86-551-64683490</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 121, 'Mobile phone', '../', '<p>86-86-18919654871 86-86-18919659471</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 122, 'Url', '../', '<p>http://www.apigcl.com http://www.boppfilmsales.com http://www.boppfilmsale.com</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 123, 'Email ID', '../', '<p>sales@boppfilmsales.com admin@apigcl.com</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 124, 'skype', '../', '<p>asiapacificsale boppfilmsales boppfilmsale</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 125, 'QQ', '../', '<p>840715367 2538474128 156641365 2500526557</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 126, 'weixin', '../', '<p>18919654871 18919659471 18955113807</p>', '2026-09-06 20:58:45');
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (29, 131, 'Company name(联系方式公司名与地图)', '../', '<p>ASIA PACIFIC INDUSTRY GROUP CO., LIMITED</p>', '2026-09-06 20:58:45');

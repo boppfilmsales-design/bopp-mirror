@@ -1,0 +1,1 @@
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (107, 347, 'White CPP Film', '../upload/image/20181226/20181226142543_57622.jpg', '<p>White CPP Film</p>', '2026-09-06 20:58:45');

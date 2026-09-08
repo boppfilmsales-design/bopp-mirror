@@ -1,0 +1,1 @@
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (140, 316, 'SELF-ADHESIVE PET LASER AND LACE TEAR TAPE', '../upload/image/20180929/20180929104554_33348.jpg', '<p><em>SELF-ADHESIVE PET LASER AND LACE TEAR TAPE</em></p>', '2026-09-06 20:58:45');

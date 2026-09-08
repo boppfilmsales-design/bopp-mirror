@@ -1,0 +1,1 @@
+INSERT OR REPLACE INTO cms_items (c_id, i_id, title, pic, content, addtime) VALUES (175, 345, 'High Shrinkage BOPS Polystyrene Film', '../upload/image/20181226/20181226121142_27723.jpg', '<p>High Shrinkage BOPS Polystyrene Film</p>', '2026-09-06 20:58:45');

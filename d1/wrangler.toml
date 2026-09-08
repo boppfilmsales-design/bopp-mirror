@@ -6,7 +6,7 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "bopp-mirror"
-database_id = "YOUR_D1_DATABASE_ID"  # 部署后替换
+database_id = "c28f2b58-981d-4093-b614-a8080e902363"
 
 # 或者使用本地数据库（开发时）
 # [[d1_databases]]

@@ -32,7 +32,7 @@ export default {
 
         if (cId) {
           sql += ' WHERE c_id = ?';
-          params.push(cId);
+          params.push(parseInt(cId, 10));
         }
 
         sql += ' ORDER BY i_id DESC LIMIT ? OFFSET ?';
@@ -42,11 +42,12 @@ export default {
 
         // 获取总数
         let countSql = 'SELECT COUNT(*) as total FROM cms_items';
-        if (cId) {
+        const countParams = cId ? [parseInt(cId, 10)] : [];
+        if (countParams.length > 0) {
           countSql += ' WHERE c_id = ?';
         }
         const { results: countResults } = await env.DB.prepare(countSql)
-          .bind(cId || '')
+          .bind(...countParams)
           .all();
         const total = countResults[0]?.total || 0;
 

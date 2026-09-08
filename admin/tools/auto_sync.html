@@ -204,20 +204,58 @@
                 }
 
                 // 解析并合并 overrides
-                // 使用 [\s\S] 匹配包括换行符的所有字符（JavaScript 没有 /s 标志）
-                // 注意：JSON 数据可能很大 (3MB+)，需要确保正则能正确处理
-                var seedMatch = content.match(/var XGXCMS_SEED\s*=\s*(\{[\s\S]*?\})\s*;/);
-                if(!seedMatch) {
+                // 使用括号计数法正确提取 JSON 对象（避免正则 lazy match 问题）
+                var seedStart = content.indexOf('var XGXCMS_SEED');
+                if (seedStart === -1) {
                     showStatus('❌ 无法解析 seed_data.js，请检查文件格式', 'error');
-                    addLog(false, '解析失败 - 正则未匹配 (内容长度:' + content.length + ')');
-                    console.log('Content preview:', content.substring(0, 200));
-                    console.log('Content suffix:', content.substring(content.length - 200));
+                    addLog(false, '解析失败 - 未找到 XGXCMS_SEED 声明');
                     return;
                 }
-                console.log('Regex matched, JSON length:', seedMatch[1].length);
+                var jsonStart = content.indexOf('{', seedStart);
+                if (jsonStart === -1) {
+                    showStatus('❌ 无法解析 seed_data.js，请检查文件格式', 'error');
+                    addLog(false, '解析失败 - 未找到 JSON 对象开始');
+                    return;
+                }
+
+                // 括号计数法提取完整的 JSON 对象
+                var braceDepth = 0;
+                var inString = false;
+                var escapeNext = false;
+                var jsonEnd = jsonStart;
+
+                for (var i = jsonStart; i < content.length; i++) {
+                    var ch = content[i];
+                    if (escapeNext) {
+                        escapeNext = false;
+                        continue;
+                    }
+                    if (ch === '\\' && inString) {
+                        escapeNext = true;
+                        continue;
+                    }
+                    if (ch === '"') {
+                        inString = !inString;
+                    } else if (!inString) {
+                        if (ch === '{') braceDepth++;
+                        else if (ch === '}') braceDepth--;
+                        if (braceDepth === 0) {
+                            jsonEnd = i + 1;
+                            break;
+                        }
+                    }
+                }
+
+                var seedJson = content.substring(jsonStart, jsonEnd);
+                if (!seedJson || braceDepth !== 0) {
+                    showStatus('❌ 无法解析 seed_data.js，JSON 格式错误', 'error');
+                    addLog(false, '解析失败 - JSON 括号不匹配');
+                    return;
+                }
+                console.log('JSON extracted, length:', seedJson.length);
 
                 try {
-                    var seedData = JSON.parse(seedMatch[1]);
+                    var seedData = JSON.parse(seedJson);
 
                     // 合并 overrides
                     for(var cid in overrides) {

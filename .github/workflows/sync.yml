@@ -44,14 +44,49 @@ jobs:
           with open('$SEED_FILE', 'r', encoding='utf-8') as f:
               content = f.read()
 
-          # Parse the existing seed data
-          match = re.search(r'var XGXCMS_SEED\s*=\s*(\{.*?\})\s*;', content, re.DOTALL)
-          if not match:
+          # Parse the existing seed data using brace counting (not regex)
+          seed_start = content.find('var XGXCMS_SEED')
+          if seed_start == -1:
               print("ERROR: Could not find XGXCMS_SEED in seed_data.js")
               sys.exit(1)
 
+          json_start = content.find('{', seed_start)
+          if json_start == -1:
+              print("ERROR: Could not find JSON object start")
+              sys.exit(1)
+
+          # Brace counting to find the actual end of JSON
+          brace_depth = 0
+          in_string = False
+          escape_next = False
+          json_end = json_start
+
+          for i in range(json_start, len(content)):
+              ch = content[i]
+              if escape_next:
+                  escape_next = False
+                  continue
+              if ch == '\\' and in_string:
+                  escape_next = True
+                  continue
+              if ch == '"':
+                  in_string = not in_string
+              elif not in_string:
+                  if ch == '{':
+                      brace_depth += 1
+                  elif ch == '}':
+                      brace_depth -= 1
+                      if brace_depth == 0:
+                          json_end = i + 1
+                          break
+
+          seed_json_str = content[json_start:json_end]
+          if brace_depth != 0:
+              print("ERROR: Unbalanced braces in JSON")
+              sys.exit(1)
+
           # Parse JSON
-          seed_json = json.loads(match.group(1))
+          seed_json = json.loads(seed_json_str)
 
           # Load overrides
           overrides = json.loads('''$OVERIDES''')
@@ -79,7 +114,7 @@ jobs:
           new_seed = json.dumps(seed_json, ensure_ascii=False, indent=2)
 
           # Replace in content
-          new_content = content[:match.start(1)] + 'var XGXCMS_SEED = ' + new_seed + ';' + content[match.end(1):]
+          new_content = content[:json_start] + 'var XGXCMS_SEED = ' + new_seed + ';' + content[json_end:]
 
           # Write back
           with open('$SEED_FILE', 'w', encoding='utf-8') as f:
